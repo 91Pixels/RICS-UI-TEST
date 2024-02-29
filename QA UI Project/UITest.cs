@@ -23,11 +23,11 @@ namespace QA_UI_Project
         [TestMethod]
         public void Login()
         {
-            // Replace these with the actual credentials
+            // Credentials
             string username = "jacobotests@gmail.com";
             string password = "tesTing1$";
 
-            // Use XPath to select elements
+            // XPath to select elements
             string usernameXpath = "//input[@id='ion-input-0']";
             string passwordXpath = "//input[@id='ion-input-1']";
             string loginButtonXpath = "//button[@id='loginButton']";
@@ -37,29 +37,29 @@ namespace QA_UI_Project
 
             try
             {
-                // Enter username
+               
                 IWebElement usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(usernameXpath)));
                 usernameField.SendKeys(username);
 
-                // Enter password
+                
                 IWebElement passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(passwordXpath)));
                 passwordField.SendKeys(password);
 
-                // Click on an element to dismiss any overlay or dropdown
+                
                 driver.FindElement(By.XPath("//*")).Click();
 
-                // Explicitly set a wait timeout of 20 seconds
+                
                 WebDriverWait wait3 = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
 
-                // Click login button with wait
+                
                 IWebElement loginButton = wait3.Until(ExpectedConditions.ElementToBeClickable(By.XPath(loginButtonXpath)));
                 loginButton.Click();
 
-                // You may need to add assertions or further logic here based on the result
+                
             }
             finally
             {
-                // Add cleanup or verification logic if needed
+                
             }
         }
 
