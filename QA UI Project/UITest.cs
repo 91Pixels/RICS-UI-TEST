@@ -10,7 +10,7 @@ namespace QA_UI_Project
     [TestClass]
     public class LoginTest
     {
-        private IWebDriver driver;
+        private IWebDriver? driver;
 
         [TestInitialize]
         public void Setup()
