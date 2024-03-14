@@ -17,7 +17,7 @@ namespace QA_UI_Project
         {
             driver = new FirefoxDriver();
             driver.Manage().Window.Maximize();
-            driver.Navigate().GoToUrl("https://portalqa.rics.io/login"); // Your actual URL
+            driver.Navigate().GoToUrl("https://portalqa.rics.io/login"); // RICS URL - QA Enviorment
         }
 
         [TestMethod]
