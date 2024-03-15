@@ -47,7 +47,7 @@ namespace QA_UI_Project
                 IWebElement passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(passwordXpath)));
                 passwordField.SendKeys(incorrectPassword);
 
-                driver.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
+                driver?.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
 
                 // Switch to the alert (if present)
                 try
@@ -56,7 +56,7 @@ namespace QA_UI_Project
                     // Assert alert text (optional)
                     string expectedMessage = "Incorrect username or password."; // Based on the image you provided
                     string actualMessage = alert.Text;
-                    Assert.AreEqual(expectedMessage, actualMessage);
+                    Assert.That(actualMessage, Is.EqualTo(expectedMessage));
 
                     // Accept the alert (optional)
                     alert.Accept();
@@ -98,7 +98,7 @@ namespace QA_UI_Project
                 IWebElement passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(passwordXpath)));
                 passwordField.SendKeys(correctPassword);
 
-                driver.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
+                driver?.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
 
                 // Assertion for successful login (no alert expected)
                 try
@@ -109,7 +109,7 @@ namespace QA_UI_Project
                     // Check for any alerts and fail the test if found
                     try
                     {
-                        IAlert alert = driver.SwitchTo().Alert();
+                        IAlert? alert = driver?.SwitchTo().Alert();
                         Assert.Fail("Unexpected alert displayed during successful login.");
                     }
                     catch (NoAlertPresentException)
@@ -133,7 +133,7 @@ namespace QA_UI_Project
         [TestCleanup]
         public void Cleanup()
         {
-            driver.Quit();
+            driver?.Quit();
         }
     }
 }
