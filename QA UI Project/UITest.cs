@@ -1,139 +1,97 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
-using System.Threading;
-using NUnit.Framework;
-using Assert = NUnit.Framework.Assert;
+using System.Collections.Generic;
 
 namespace QA_UI_Project
 {
-    [TestClass]
+    [TestFixture]
     public class LoginTest
     {
-        private IWebDriver? driver;
+        private IWebDriver _driver;
+        private string _baseUrl;
+        private string _usernameXpath;
+        private string _passwordXpath;
+        private string _loginButtonXpath;
+        private string _expectedUrlAfterLogin;
 
-        [TestInitialize]
-        public void Setup()
+        [OneTimeSetUp]
+        public void SetupTest()
         {
-            driver = new FirefoxDriver();
-            driver.Manage().Window.Maximize();
-            driver.Navigate().GoToUrl("https://portalqa.rics.io/login"); // Replace with your actual URL
+            _driver = new FirefoxDriver();
+            _driver.Manage().Window.Maximize();
+
+            // Set the parameters
+            _baseUrl = "https://portalqa.rics.io/login";
+            _usernameXpath = "//*[@id=\":r0:\"]";
+            _passwordXpath = "//*[@id=\":r1:\"]";
+            _loginButtonXpath = "/html/body/div[1]/div/div/div/div/div[2]/button";
+            _expectedUrlAfterLogin = "https://portalqa.rics.io/locations";
         }
 
-        [TestMethod]
-        public void LoginIncorrectPassword()
+        [Test, TestCaseSource(nameof(GetNegativeTestCases))]
+        public void NegativeTest_InvalidCredentials(string username, string password, string expectedMessage)
         {
-            // Credentials
-            string username = "jacobotests@gmail.com";
-            string incorrectPassword = "wrong_password"; // Incorrect password
+            PerformLoginTest(username, password, expectedMessage);
+        }
 
-            // XPath to select elements
-            string usernameXpath = "//*[@id=\":r0:\"]";
-            string passwordXpath = "//*[@id=\":r1:\"]";
-            string loginButtonXpath = "/html/body/div[1]/div/div/div/div/div[2]/button";
+        [Test, TestCaseSource(nameof(GetPositiveTestCase))]
+        public void PositiveTest_ValidCredentials(string username, string password)
+        {
+            PerformLoginTest(username, password, null);
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            wait.Until(ExpectedConditions.UrlToBe(_expectedUrlAfterLogin));
+        }
 
-            // Login logic with explicit waits
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+        private void PerformLoginTest(string username, string password, string? expectedMessage)
+        {
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
 
             try
             {
-                // Login attempt with incorrect password
-                IWebElement usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(usernameXpath)));
+                _driver.Navigate().GoToUrl(_baseUrl);
+
+                var usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_usernameXpath)));
                 usernameField.SendKeys(username);
 
-                IWebElement passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(passwordXpath)));
-                passwordField.SendKeys(incorrectPassword);
+                var passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_passwordXpath)));
+                passwordField.SendKeys(password);
 
-                driver?.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
+                _driver.FindElement(By.XPath(_loginButtonXpath)).Click();
 
-                // Switch to the alert (if present)
-                try
+                if (expectedMessage != null)
                 {
-                    IAlert alert = wait.Until(ExpectedConditions.AlertIsPresent());
-                    // Assert alert text (optional)
-                    string expectedMessage = "Incorrect username or password."; // Based on the image you provided
-                    string actualMessage = alert.Text;
+                    var alert = wait.Until(ExpectedConditions.AlertIsPresent());
+                    var actualMessage = alert.Text;
                     Assert.That(actualMessage, Is.EqualTo(expectedMessage));
-
-                    // Accept the alert (optional)
                     alert.Accept();
-                }
-                catch (NoAlertPresentException)
-                {
-                    // Handle the case where no alert is displayed (optional)
-                    Assert.Fail("Expected error alert was not displayed.");
                 }
             }
             catch (Exception)
             {
-                // Handle any unexpected exceptions during login attempt
                 Assert.Inconclusive("An unexpected error occurred during login with incorrect password. Investigate further.");
             }
         }
 
-        [TestMethod]
-        public void Login_CorrectPassword()
+        [OneTimeTearDown]
+        public void CleanupTest()
         {
-            // Credentials
-            string username = "jacobotests@gmail.com";
-            string correctPassword = "tesTing1$"; // Replace with your actual correct password
-
-            // XPath to select elements
-            string usernameXpath = "//*[@id=\":r0:\"]";
-            string passwordXpath = "//*[@id=\":r1:\"]";
-            string loginButtonXpath = "/html/body/div[1]/div/div/div/div/div[2]/button";
-
-            // Login logic with explicit waits
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-
-            try
-            {
-                // Login attempt with correct password
-                IWebElement usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(usernameXpath)));
-                usernameField.SendKeys(username);
-
-                IWebElement passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(passwordXpath)));
-                passwordField.SendKeys(correctPassword);
-
-                driver?.FindElement(By.XPath(loginButtonXpath)).Click(); // Click login button
-
-                // Assertion for successful login (no alert expected)
-                try
-                {
-                    // Wait for a short duration to allow potential alerts to appear
-                    Thread.Sleep(2000); // Simple wait (consider WebDriverWait for more robustness)
-
-                    // Check for any alerts and fail the test if found
-                    try
-                    {
-                        IAlert? alert = driver?.SwitchTo().Alert();
-                        Assert.Fail("Unexpected alert displayed during successful login.");
-                    }
-                    catch (NoAlertPresentException)
-                    {
-                        // No alert expected for successful login
-                    }
-                }
-                catch (Exception)
-                {
-                    // Handle any unexpected exceptions during login attempt
-                    Assert.Inconclusive("An unexpected error occurred during login with correct password. Investigate further.");
-                }
-            }
-            catch (Exception)
-            {
-                // Handle any unexpected exceptions during login attempt
-                Assert.Inconclusive("An unexpected error occurred during login with correct password. Investigate further.");
-            }
+            _driver.Quit();
         }
 
-        [TestCleanup]
-        public void Cleanup()
+        private static IEnumerable<TestCaseData> GetNegativeTestCases()
         {
-            driver?.Quit();
+            yield return new TestCaseData("jacobotests@gmail.com", "wrong_password", "Incorrect username or password.")
+                .SetName("Negative Test - Invalid Credentials");
+        }
+
+        private static IEnumerable<TestCaseData> GetPositiveTestCase()
+        {
+            yield return new TestCaseData("jacobotests@gmail.com", "tesTing1$")
+                .SetName("Positive Test - Valid Credentials");
         }
     }
 }
