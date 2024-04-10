@@ -11,76 +11,65 @@ namespace QA_UI_Project
     [TestFixture]
     public class LoginTest
     {
+        private const string BaseUrl = "https://portalqa.rics.io/login";
+        private const string UsernameXpath = "//*[@id=\":r0:\"]";
+        private const string PasswordXpath = "//*[@id=\":r1:\"]";
+        private const string LoginButtonXpath = "/html/body/div[1]/div/div/div/div/div[2]/button";
+        private const string ExpectedUrlAfterLogin = "https://portalqa.rics.io/locations";
+        private const int DefaultTimeout = 10;
+
         private IWebDriver _driver;
-        private string _baseUrl;
-        private string _usernameXpath;
-        private string _passwordXpath;
-        private string _loginButtonXpath;
-        private string _expectedUrlAfterLogin;
 
         [OneTimeSetUp]
         public void SetupTest()
         {
             _driver = new FirefoxDriver();
             _driver.Manage().Window.Maximize();
-
-            // Set the parameters
-            _baseUrl = "https://portalqa.rics.io/login";
-            _usernameXpath = "//*[@id=\":r0:\"]";
-            _passwordXpath = "//*[@id=\":r1:\"]";
-            _loginButtonXpath = "/html/body/div[1]/div/div/div/div/div[2]/button";
-            _expectedUrlAfterLogin = "https://portalqa.rics.io/locations";
         }
 
         [Test, TestCaseSource(nameof(GetNegativeTestCases))]
         public void NegativeTest_InvalidCredentials(string username, string password, string expectedMessage)
-        {
-            PerformLoginTest(username, password, expectedMessage);
-        }
+            => PerformLoginTest(username, password, expectedMessage);
 
         [Test, TestCaseSource(nameof(GetPositiveTestCase))]
         public void PositiveTest_ValidCredentials(string username, string password)
         {
             PerformLoginTest(username, password, null);
-            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            wait.Until(ExpectedConditions.UrlToBe(_expectedUrlAfterLogin));
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(DefaultTimeout));
+            wait.Until(ExpectedConditions.UrlToBe(ExpectedUrlAfterLogin));
         }
 
         private void PerformLoginTest(string username, string password, string? expectedMessage)
         {
-            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(DefaultTimeout));
 
             try
             {
-                _driver.Navigate().GoToUrl(_baseUrl);
-
-                var usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_usernameXpath)));
+                _driver.Navigate().GoToUrl(BaseUrl);
+                var usernameField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(UsernameXpath)));
                 usernameField.SendKeys(username);
 
-                var passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_passwordXpath)));
+                var passwordField = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(PasswordXpath)));
                 passwordField.SendKeys(password);
 
-                _driver.FindElement(By.XPath(_loginButtonXpath)).Click();
+                _driver.FindElement(By.XPath(LoginButtonXpath)).Click();
 
                 if (expectedMessage != null)
                 {
                     var alert = wait.Until(ExpectedConditions.AlertIsPresent());
                     var actualMessage = alert.Text;
-                    Assert.That(actualMessage, Is.EqualTo(expectedMessage));
+                    Assert.That(actualMessage, Is.EqualTo(expectedMessage), $"Alert message does not match expected: '{expectedMessage}'");
                     alert.Accept();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Assert.Inconclusive("An unexpected error occurred during login with incorrect password. Investigate further.");
+                Assert.Inconclusive($"An unexpected error occurred during login with incorrect password: {ex.Message}");
             }
         }
 
         [OneTimeTearDown]
-        public void CleanupTest()
-        {
-            _driver.Quit();
-        }
+        public void CleanupTest() => _driver.Quit();
 
         private static IEnumerable<TestCaseData> GetNegativeTestCases()
         {
